@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# virtual environments
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+
+# experiment tracking
+wandb/
+
+# training and inference output
+checkpoints/
+outputs/
+*.pth
+!models/cnn_grain_classifier.pth

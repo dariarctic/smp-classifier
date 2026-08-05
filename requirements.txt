@@ -1,0 +1,18 @@
+# Versions the published model was trained and validated with (Python 3.10.10).
+#   python -m pip install -r requirements.txt
+# On Linux with an NVIDIA GPU, pip resolves the matching CUDA wheels for torch
+# automatically. Everything also runs on CPU, just more slowly.
+
+numpy==2.2.5
+xarray==2025.4.0
+netCDF4==1.7.2
+torch==2.7.0
+torchmetrics==1.7.1
+scikit-learn==1.6.1
+matplotlib==3.10.1
+
+jupyterlab==4.4.1
+ipykernel==6.29.5
+
+# Optional: only needed if you pass a wandb run to train_model.
+wandb==0.19.11
