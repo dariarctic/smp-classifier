@@ -24,22 +24,28 @@ held-out validation profiles.
 smp-cnn/
 ├── data/
 │   ├── labelled/smp_profiles_labelled.nc   # 153 hand-labelled profiles
-│   └── unlabelled/PS111_profiles.nc        # example campaign data
+│   ├── unlabelled/PS111_profiles.nc        # example campaign data
+│   └── raw/                                # fine-resolution campaign files (not in version control)
 ├── models/
 │   ├── cnn_grain_classifier.pth            # published weights
 │   └── normalization_constants.pkl         # the constants they were trained with
 ├── notebooks/
+│   ├── 00_preprocessing.ipynb              # raw SMP data -> CNN input files
 │   ├── 01_training.ipynb                   # train and evaluate
 │   ├── 02_inference.ipynb                  # classify unseen profiles
-│   └── 03_validation.ipynb                 # published model vs. hand labels
+│   ├── 03_validation.ipynb                 # published model vs. hand labels
+│   └── 04_remap_predictions.ipynb          # predictions -> fine-resolution depth grid
 └── src/
-    ├── config.py       # features, labels, paths, hyper-parameters
-    ├── data.py         # splitting, normalization, the Dataset
-    ├── model.py        # the CNN
-    ├── training.py     # training loop
-    ├── evaluation.py   # metrics
-    ├── inference.py    # prediction on unseen profiles
-    └── plotting.py     # figures
+    ├── config.py             # features, labels, paths, hyper-parameters
+    ├── data.py               # splitting, normalization, the Dataset
+    ├── model.py               # the CNN
+    ├── training.py            # training loop
+    ├── evaluation.py          # metrics
+    ├── inference.py           # prediction on unseen profiles
+    ├── plotting.py            # figures
+    ├── raw_import.py          # raw .pnt + snowpit meta -> fine-resolution NetCDF
+    ├── feature_engineering.py # fine-resolution -> depth-bin feature NetCDF
+    └── remapping.py           # coarse predictions -> fine-resolution depth grid
 ```
 
 ## Setup
@@ -113,6 +119,44 @@ cannot reliably separate, giving the four classes above.
 Depth bins where any feature is `NaN` are dropped automatically. Profiles left
 with no valid bins are skipped and reported.
 
+## Preprocessing
+
+Turns raw SMP field data into the file format above, and maps predictions back
+onto the original depth grid afterwards. Needs
+[snowmicropyn](https://snowmicropyn.readthedocs.io) and `scipy`, listed
+separately in `requirements-preprocessing.txt` since training, evaluation and
+inference don't need them:
+
+```bash
+python -m pip install -r requirements.txt -r requirements-preprocessing.txt
+```
+
+- **`00_preprocessing.ipynb`** — walks one campaign's raw `.pnt` profiles and
+  snowpit meta (`src/raw_import.py`), builds the fine-resolution
+  `(profile, sample)` campaign file, then aggregates it into 1 mm depth-bin
+  features (`src/feature_engineering.py`) matching the format above. Writes
+  the fine-resolution file to `data/raw/` (excluded from version control — as
+  large as the source data) and the feature file to `data/unlabelled/` or
+  `data/labelled/`. The fine-resolution file also carries King et al. (2020b)
+  and Calonne & Richter (2020) density/SSA retrievals, so it's useful on its
+  own — before, or entirely without, running it through the CNN.
+- **`04_remap_predictions.ipynb`** — takes the fine-resolution file from
+  `00_preprocessing.ipynb` and the `predicted_labels` written by
+  `02_inference.ipynb`, and assigns every raw depth sample the label of the
+  1 mm bin it falls into (`src/remapping.py`), so the CNN's coarse
+  predictions can be plotted or analyzed at the SMP's native resolution.
+
+A campaign directory is expected in the layout the SMP field software writes:
+one folder per station (e.g. `PS111_20180211_3-2_SMP`), each with one or more
+`*TRANS*` transect folders holding a tab-separated `*_ini.txt` table and a
+`_raw`/`raw` folder of `.pnt` profiles (some campaigns keep one shared
+`_raw`/`raw` per station instead — both are checked), plus a matching
+snowpit directory with one `*META.txt` per station. The transect table's
+columns are detected by keyword rather than a fixed layout, since campaigns
+name and order them differently (a bare file number vs. a full profile name,
+for instance). Validated against four campaigns' raw data (AFIN25, PS111,
+PS118, PS124), each laid out slightly differently.
+
 ## Model
 
 Three 1D convolution blocks (18 → 32 → 64 → 128 channels, kernel size 21, each
@@ -145,7 +189,7 @@ shape mismatch.
 `data/` holds the labelled training set and one example campaign (PS111) —
 enough to train, validate and run inference end to end. The full-resolution
 source profiles and the complete campaign predictions are too large for version
-control and are available from the authors on request.
+control and are available from the authors on request. The raw SMP datasets are available on PANGEA.
 
 ## License
 
@@ -167,6 +211,12 @@ Alfred Wegener Institute, Helmholtz Centre for Polar and Marine Research (AWI).
 SMP measurements were collected during the PS111, PS118 and PS124 Polarstern
 expeditions. Micro-mechanical profile parameters are derived using
 [snowmicropyn](https://snowmicropyn.readthedocs.io).
+
+Several functions in `src/raw_import.py` and `src/feature_engineering.py` (raw
+force-signal cleanup, layer-marker labelling, and the depth-bin/shot-noise
+feature aggregation) are adapted from Julia Kaltenborn's
+[snowdragon](https://github.com/liellnima/snowdragon) (MIT License), credited
+inline at each function.
 
 ## Citation
 

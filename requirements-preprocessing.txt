@@ -1,0 +1,10 @@
+# Only needed for notebooks/00_preprocessing.ipynb and
+# notebooks/04_remap_predictions.ipynb (src/raw_import.py, feature_engineering.py,
+# remapping.py). Training, evaluation and inference only need requirements.txt.
+#   python -m pip install -r requirements.txt -r requirements-preprocessing.txt
+#
+# snowmicropyn is distributed under its own GPL license (see README.md) and is
+# used here only to read raw .pnt files and compute the Löwe et al. (2012)
+# shot-noise parameters; no snowmicropyn source is included in this repo.
+snowmicropyn==1.2.1
+scipy==1.12.0

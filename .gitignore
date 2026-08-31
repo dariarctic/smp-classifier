@@ -25,3 +25,12 @@ checkpoints/
 outputs/
 *.pth
 !models/cnn_grain_classifier.pth
+
+# fine-resolution campaign data built by notebooks/00_preprocessing.ipynb,
+# as large as the full-resolution source profiles (see README.md)
+data/raw/
+
+# reproduces the shipped data/unlabelled/PS111_profiles.nc from raw data, as
+# a validation artifact for notebooks/00_preprocessing.ipynb -- not meant to
+# ship alongside the file it's validating
+data/unlabelled/PS111_profiles_rebuilt.nc
