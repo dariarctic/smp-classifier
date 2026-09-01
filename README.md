@@ -220,5 +220,5 @@ inline at each function.
 
 ## Citation
 
-A citation for the accompanying publication will be added here once the paper is
+The citation for the accompanying publication will be added once the paper is
 available.
